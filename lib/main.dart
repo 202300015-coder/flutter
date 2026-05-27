@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 22),
                         const Text(
-                          'Batman, en una versión más limpia',
+                          'Batman, en su verion mas brutal',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 24,
@@ -92,7 +92,7 @@ class HomePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 10),
                         Text(
-                          'Pantalla simple, visual y sin elementos innecesarios. La imagen queda como protagonista.',
+                          'Absolute batman VS Absolute Poison Ivy.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 15,
@@ -106,9 +106,9 @@ class HomePage extends StatelessWidget {
                           spacing: 8,
                           runSpacing: 8,
                           children: const [
-                            _Tag(label: 'Minimal'),
-                            _Tag(label: 'Visual'),
-                            _Tag(label: 'Portable'),
+                            _Tag(label: 'Oscuro'),
+                            _Tag(label: 'Absoluto'),
+                            _Tag(label: 'Bruta;'),
                           ],
                         ),
                       ],
