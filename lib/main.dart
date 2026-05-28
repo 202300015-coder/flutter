@@ -82,7 +82,7 @@ class HomePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 22),
                         const Text(
-                          'Batman, en su verion mas brutal',
+                          'Batman, en su versión mas brutal',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 24,
@@ -105,10 +105,11 @@ class HomePage extends StatelessWidget {
                           alignment: WrapAlignment.center,
                           spacing: 8,
                           runSpacing: 8,
+                          textDirection: TextDirection.rtl,
                           children: const [
                             _Tag(label: 'Oscuro'),
                             _Tag(label: 'Absoluto'),
-                            _Tag(label: 'Bruta;'),
+                            _Tag(label: 'Brutal'),
                           ],
                         ),
                       ],
@@ -141,7 +142,7 @@ class _Tag extends StatelessWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(5),
       ),
     );
   }
