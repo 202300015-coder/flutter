@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> {
               : textoController.text.toUpperCase(),
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: checkboxValue ? 42 : 32,
+            fontSize: checkboxValue ? 62 : 32,
             fontWeight: FontWeight.w900,
             letterSpacing: 2,
           ),
