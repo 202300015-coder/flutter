@@ -16,134 +16,170 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF111827),
-          brightness: Brightness.light,
         ),
-        scaffoldBackgroundColor: const Color(0xFFF4F1EA),
       ),
       home: const HomePage(),
     );
   }
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final TextEditingController textoController = TextEditingController();
+
+  bool mostrarResultado = false;
+  bool checkboxValue = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mi App'),
+        title: const Text("Mi App"),
         centerTitle: true,
-        backgroundColor: Colors.transparent,
-        foregroundColor: const Color(0xFF111827),
-        elevation: 0,
       ),
       body: Container(
+        width: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFFF8F5EF), Color(0xFFE7E0D1)],
+            colors: [
+              Color(0xFFF8F5EF),
+              Color(0xFFE7E0D1),
+            ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 420),
-                child: Card(
-                  elevation: 12,
-                  shadowColor: Colors.black26,
-                  color: Colors.white.withValues(alpha: 0.93),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(28),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF111827).withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(18),
-                            child: Image.asset(
-                              'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
-                              height: 220,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
-                        const Text(
-                          'Batman, en su versión mas brutal',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF111827),
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'Absolute batman VS Absolute Poison Ivy.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 15,
-                            height: 1.45,
-                            color: Colors.grey.shade700,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Wrap(
-                          alignment: WrapAlignment.center,
-                          spacing: 8,
-                          runSpacing: 8,
-                          textDirection: TextDirection.rtl,
-                          children: const [
-                            _Tag(label: 'Oscuro'),
-                            _Tag(label: 'Absoluto'),
-                            _Tag(label: 'Brutal'),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: mostrarResultado
+                ? _buildResultado()
+                : _buildFormulario(),
           ),
         ),
       ),
     );
   }
-}
 
-class _Tag extends StatelessWidget {
-  const _Tag({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      label: Text(label),
-      side: BorderSide.none,
-      backgroundColor: const Color(0xFF111827).withValues(alpha: 0.08),
-      labelStyle: const TextStyle(
-        color: Color(0xFF111827),
-        fontWeight: FontWeight.w600,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+  Widget _buildFormulario() {
+    return Card(
+      elevation: 10,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(25),
       ),
+      child: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(15),
+              child: Image.asset(
+                'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
+                height: 220,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Batman, en su versión más brutal",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            TextField(
+              controller: textoController,
+              decoration: InputDecoration(
+                labelText: "Escribe tu texto",
+                hintText: "Ingresa algo aquí...",
+                prefixIcon: const Icon(Icons.edit),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 15),
+
+            CheckboxListTile(
+              title: const Text("Activar modo destacado"),
+              value: checkboxValue,
+              onChanged: (value) {
+                setState(() {
+                  checkboxValue = value!;
+                });
+              },
+            ),
+
+            const SizedBox(height: 10),
+
+            ElevatedButton.icon(
+              onPressed: () {
+                debugPrint(
+                  "Texto: ${textoController.text} - Checkbox: $checkboxValue",
+                );
+
+                setState(() {
+                  mostrarResultado = true;
+                });
+              },
+              icon: const Icon(Icons.visibility),
+              label: const Text("Mostrar Texto"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildResultado() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(
+          Icons.auto_awesome,
+          size: 80,
+        ),
+
+        const SizedBox(height: 20),
+
+        Text(
+          textoController.text.isEmpty
+              ? "NO ESCRIBISTE NADA"
+              : textoController.text.toUpperCase(),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: checkboxValue ? 42 : 32,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
+        ),
+
+        const SizedBox(height: 40),
+
+        ElevatedButton.icon(
+          onPressed: () {
+            setState(() {
+              mostrarResultado = false;
+            });
+          },
+          icon: const Icon(Icons.arrow_back),
+          label: const Text("Volver"),
+        ),
+      ],
     );
   }
 }
