@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 void main() {
   runApp(const MyApp());
@@ -146,40 +147,50 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildResultado() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(
-          Icons.auto_awesome,
-          size: 80,
-        ),
+    return SingleChildScrollView(
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.file(
+                File(r'C:\Users\User-PC\Documents\GitHub\proyecto-202300015-coder\flutter\absolute scarecraw.webp'),
+                width: MediaQuery.of(context).size.width * 0.6,
+                height: MediaQuery.of(context).size.height * 0.4,
+                fit: BoxFit.contain,
+              ),
 
-        const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-        Text(
-          textoController.text.isEmpty
-              ? "NO ESCRIBISTE NADA"
-              : textoController.text.toUpperCase(),
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: checkboxValue ? 62 : 32,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 2,
+              Text(
+                textoController.text.isEmpty
+                    ? "NO ESCRIBISTE NADA"
+                    : textoController.text.toUpperCase(),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: checkboxValue ? 62 : 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              ElevatedButton.icon(
+                onPressed: () {
+                  setState(() {
+                    mostrarResultado = false;
+                    textoController.clear();
+                  });
+                },
+                icon: const Icon(Icons.arrow_back),
+                label: const Text("Volver"),
+              ),
+            ],
           ),
         ),
-
-        const SizedBox(height: 40),
-
-        ElevatedButton.icon(
-          onPressed: () {
-            setState(() {
-              mostrarResultado = false;
-            });
-          },
-          icon: const Icon(Icons.arrow_back),
-          label: const Text("Volver"),
-        ),
-      ],
+      ),
     );
   }
 }
