@@ -19,7 +19,167 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF111827),
         ),
       ),
-      home: const HomePage(),
+      home: const LoginPage(),
+    );
+  }
+}
+
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+
+  bool aceptaTerminos = false;
+
+  final RegExp emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void iniciarSesion() {
+    String email = emailController.text.trim();
+    String password = passwordController.text;
+
+    if (!emailRegex.hasMatch(email)) {
+      mostrarMensaje("El correo debe contener @");
+      return;
+    }
+
+    if (password.length < 6) {
+      mostrarMensaje("La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    if (!aceptaTerminos) {
+      mostrarMensaje("Debes aceptar los términos y condiciones");
+      return;
+    }
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomePage(),
+      ),
+    );
+  }
+
+  void mostrarMensaje(String mensaje) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(mensaje)),
+    );
+  }
+
+  void mostrarTerminos() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Términos y Condiciones"),
+          content: const SingleChildScrollView(
+            child: Text(
+              "Al utilizar esta aplicación aceptas "
+              "las condiciones de uso establecidas "
+              "para fines académicos.",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cerrar"),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Login"),
+        centerTitle: true,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(25),
+        child: Center(
+          child: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.lock,
+                  size: 100,
+                ),
+
+                const SizedBox(height: 20),
+
+                TextField(
+                  controller: emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Correo",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: "Contraseña",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                CheckboxListTile(
+                  value: aceptaTerminos,
+                  title: const Text(
+                    "Acepto los términos y condiciones",
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      aceptaTerminos = value!;
+                    });
+                  },
+                ),
+
+                TextButton(
+                  onPressed: mostrarTerminos,
+                  child: const Text(
+                    "Ver términos y condiciones",
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                ElevatedButton(
+                  onPressed: iniciarSesion,
+                  child: const Text(
+                    "Iniciar Sesión",
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
