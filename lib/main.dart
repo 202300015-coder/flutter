@@ -32,11 +32,17 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+  // Controladores de entrada.
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
+  // Estado del formulario.
   bool aceptaTerminos = false;
+  String? emailError;
+  String? passwordError;
+  String? terminosError;
 
+  // Regex basica para validar correo.
   final RegExp emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
 
   @override
@@ -47,21 +53,30 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void iniciarSesion() {
-    String email = emailController.text.trim();
-    String password = passwordController.text;
+    // Lee y limpia los datos del formulario.
+    final String email = emailController.text.trim();
+    final String password = passwordController.text;
 
-    if (!emailRegex.hasMatch(email)) {
-      mostrarMensaje("El correo debe contener @");
-      return;
-    }
+    setState(() {
+      // Reinicia los errores antes de validar.
+      emailError = null;
+      passwordError = null;
+      terminosError = null;
 
-    if (password.length < 6) {
-      mostrarMensaje("La contraseña debe tener al menos 6 caracteres");
-      return;
-    }
+      if (!emailRegex.hasMatch(email)) {
+        emailError = "Ingresa un correo válido";
+      }
 
-    if (!aceptaTerminos) {
-      mostrarMensaje("Debes aceptar los términos y condiciones");
+      if (password.length < 9) {
+        passwordError = "Minimo 9 caracteres";
+      }
+
+      if (!aceptaTerminos) {
+        terminosError = "Debes aceptar los términos";
+      }
+    });
+
+    if (emailError != null || passwordError != null || terminosError != null) {
       return;
     }
 
@@ -70,12 +85,6 @@ class _LoginPageState extends State<LoginPage> {
       MaterialPageRoute(
         builder: (_) => const HomePage(),
       ),
-    );
-  }
-
-  void mostrarMensaje(String mensaje) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(mensaje)),
     );
   }
 
@@ -108,74 +117,104 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Login"),
         centerTitle: true,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(25),
+        padding: const EdgeInsets.all(12),
         child: Center(
-          child: SizedBox(
-            width: 400,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.lock,
-                  size: 100,
+          // Contenedor simple y centrado del formulario.
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: Card(
+              elevation: 0,
+              color: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Campo de correo con error en linea.
+                    TextField(
+                      controller: emailController,
+                      onChanged: (_) {
+                        if (emailError != null) {
+                          setState(() {
+                            emailError = null;
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Correo",
+                        border: const OutlineInputBorder(),
+                        errorText: emailError,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Campo de contrasena con longitud minima.
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      onChanged: (_) {
+                        if (passwordError != null) {
+                          setState(() {
+                            passwordError = null;
+                          });
+                        }
+                      },
+                      decoration: InputDecoration(
+                        labelText: "Contraseña",
+                        border: const OutlineInputBorder(),
+                        errorText: passwordError,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Checkbox de terminos.
+                    CheckboxListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      visualDensity: VisualDensity.compact,
+                      value: aceptaTerminos,
+                      title: const Text("Acepto los terminos y condiciones"),
+                      onChanged: (value) {
+                        setState(() {
+                          aceptaTerminos = value ?? false;
+                          terminosError = null;
+                        });
+                      },
+                    ),
+                    if (terminosError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 4, bottom: 2),
+                        child: Text(
+                          terminosError!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    // Enlace al modal de terminos.
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton(
+                        onPressed: mostrarTerminos,
+                        child: const Text("Ver términos y condiciones"),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Boton de envio del formulario.
+                    ElevatedButton(
+                      onPressed: iniciarSesion,
+                      child: const Text("Iniciar Sesión"),
+                    ),
+                  ],
                 ),
-
-                const SizedBox(height: 20),
-
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                    labelText: "Correo",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: "Contraseña",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                CheckboxListTile(
-                  value: aceptaTerminos,
-                  title: const Text(
-                    "Acepto los términos y condiciones",
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      aceptaTerminos = value!;
-                    });
-                  },
-                ),
-
-                TextButton(
-                  onPressed: mostrarTerminos,
-                  child: const Text(
-                    "Ver términos y condiciones",
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                ElevatedButton(
-                  onPressed: iniciarSesion,
-                  child: const Text(
-                    "Iniciar Sesión",
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
