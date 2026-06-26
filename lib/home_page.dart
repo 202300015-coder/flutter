@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'alazar.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -12,6 +13,7 @@ class _HomePageState extends State<HomePage> {
 
   bool mostrarResultado = false;
   bool checkboxValue = false;
+  double imageScale = 1.0;
 
   @override
   void dispose() {
@@ -25,6 +27,19 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Mi App'),
         centerTitle: true,
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const AlazarPage(),
+                ),
+              );
+            },
+            child: const Text('Nuevo'),
+          ),
+        ],
       ),
       body: Container(
         width: double.infinity,
@@ -63,7 +78,7 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(15),
               child: Image.asset(
                 'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
-                height: 220,
+                height: 220 * imageScale,
                 fit: BoxFit.cover,
               ),
             ),
@@ -89,6 +104,20 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 15),
+            const Text('Tamaño de la imagen'),
+            Slider(
+              value: imageScale,
+              min: 0.5,
+              max: 1.6,
+              divisions: 11,
+              label: imageScale.toStringAsFixed(1),
+              onChanged: (value) {
+                setState(() {
+                  imageScale = value;
+                });
+              },
+            ),
+            const SizedBox(height: 5),
             CheckboxListTile(
               title: const Text('Activar modo destacado'),
               value: checkboxValue,
@@ -128,8 +157,8 @@ class _HomePageState extends State<HomePage> {
             children: [
               Image.asset(
                 'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
-                width: MediaQuery.of(context).size.width * 0.6,
-                height: MediaQuery.of(context).size.height * 0.4,
+                width: MediaQuery.of(context).size.width * 0.6 * imageScale,
+                height: MediaQuery.of(context).size.height * 0.4 * imageScale,
                 fit: BoxFit.contain,
               ),
               const SizedBox(height: 20),
