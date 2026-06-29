@@ -1,0 +1,190 @@
+import 'package:flutter/material.dart';
+
+import 'auth_database.dart';
+
+class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+
+  String _usernameError = '';
+  String _passwordError = '';
+  String _confirmPasswordError = '';
+  bool _isSaving = false;
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _registerUser() async {
+    final username = _usernameController.text.trim();
+    final password = _passwordController.text;
+    final confirmPassword = _confirmPasswordController.text;
+
+    String usernameError = '';
+    String passwordError = '';
+    String confirmPasswordError = '';
+    bool isValid = true;
+
+    if (username.isEmpty) {
+      usernameError = 'El usuario es obligatorio';
+      isValid = false;
+    }
+
+    if (password.isEmpty) {
+      passwordError = 'La contraseña es obligatoria';
+      isValid = false;
+    } else if (password.length < 4) {
+      passwordError = 'La contraseña debe tener al menos 4 caracteres';
+      isValid = false;
+    }
+
+    if (confirmPassword.isEmpty) {
+      confirmPasswordError = 'Confirma la contraseña';
+      isValid = false;
+    } else if (confirmPassword != password) {
+      confirmPasswordError = 'Las contraseñas no coinciden';
+      isValid = false;
+    }
+
+    setState(() {
+      _usernameError = usernameError;
+      _passwordError = passwordError;
+      _confirmPasswordError = confirmPasswordError;
+    });
+
+    if (!isValid) {
+      return;
+    }
+
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      final created = await AuthDatabase.instance
+          .registerUser(
+            username: username,
+            password: password,
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (!mounted) {
+        return;
+      }
+
+      if (!created) {
+        setState(() {
+          _usernameError = 'Ese usuario ya existe';
+        });
+        return;
+      }
+
+      Navigator.pop(
+        context,
+        username,
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo registrar. Intenta de nuevo.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Registro'),
+      ),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(30),
+          child: Column(
+            children: [
+              const Text(
+                'Crea tu cuenta',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(
+                  hintText: 'Usuario',
+                ),
+              ),
+              if (_usernameError.isNotEmpty)
+                Text(
+                  _usernameError,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Contraseña',
+                ),
+              ),
+              if (_passwordError.isNotEmpty)
+                Text(
+                  _passwordError,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _confirmPasswordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  hintText: 'Confirmar contraseña',
+                ),
+              ),
+              if (_confirmPasswordError.isNotEmpty)
+                Text(
+                  _confirmPasswordError,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: _isSaving ? null : _registerUser,
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Registrarme'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -64,84 +64,86 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildFormulario() {
-    return Card(
-      elevation: 10,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(25),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(15),
-              child: Image.asset(
-                'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
-                height: 220 * imageScale,
-                fit: BoxFit.cover,
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Batman, en su versión más brutal',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: textoController,
-              decoration: InputDecoration(
-                labelText: 'Escribe tu texto',
-                hintText: 'Ingresa algo aquí...',
-                prefixIcon: const Icon(Icons.edit),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(15),
+    return SingleChildScrollView(
+      child: Card(
+        elevation: 10,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(25),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.asset(
+                  'absolute-batman-wraparound-variant-by-clay-seth-mann-v0-694w8mit4yjg1.webp',
+                  height: 220 * imageScale,
+                  fit: BoxFit.cover,
                 ),
               ),
-            ),
-            const SizedBox(height: 15),
-            const Text('Tamaño de la imagen'),
-            Slider(
-              value: imageScale,
-              min: 0.5,
-              max: 1.6,
-              divisions: 11,
-              label: imageScale.toStringAsFixed(1),
-              onChanged: (value) {
-                setState(() {
-                  imageScale = value;
-                });
-              },
-            ),
-            const SizedBox(height: 5),
-            CheckboxListTile(
-              title: const Text('Activar modo destacado'),
-              value: checkboxValue,
-              onChanged: (value) {
-                setState(() {
-                  checkboxValue = value ?? false;
-                });
-              },
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: () {
-                debugPrint(
-                  'Texto: ${textoController.text} - Checkbox: $checkboxValue',
-                );
+              const SizedBox(height: 20),
+              const Text(
+                'Batman, en su versión más brutal',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: textoController,
+                decoration: InputDecoration(
+                  labelText: 'Escribe tu texto',
+                  hintText: 'Ingresa algo aquí...',
+                  prefixIcon: const Icon(Icons.edit),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Text('Tamaño de la imagen'),
+              Slider(
+                value: imageScale,
+                min: 0.5,
+                max: 1.6,
+                divisions: 11,
+                label: imageScale.toStringAsFixed(1),
+                onChanged: (value) {
+                  setState(() {
+                    imageScale = value;
+                  });
+                },
+              ),
+              const SizedBox(height: 5),
+              CheckboxListTile(
+                title: const Text('Activar modo destacado'),
+                value: checkboxValue,
+                onChanged: (value) {
+                  setState(() {
+                    checkboxValue = value ?? false;
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: () {
+                  debugPrint(
+                    'Texto: ${textoController.text} - Checkbox: $checkboxValue',
+                  );
 
-                setState(() {
-                  mostrarResultado = true;
-                });
-              },
-              icon: const Icon(Icons.visibility),
-              label: const Text('Mostrar Texto'),
-            ),
-          ],
+                  setState(() {
+                    mostrarResultado = true;
+                  });
+                },
+                icon: const Icon(Icons.visibility),
+                label: const Text('Mostrar Texto'),
+              ),
+            ],
+          ),
         ),
       ),
     );

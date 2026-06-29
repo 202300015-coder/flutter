@@ -10,10 +10,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_application_1/main.dart';
 
 void main() {
-  testWidgets('renders the home page', (WidgetTester tester) async {
+  testWidgets('renders the login page', (WidgetTester tester) async {
     await tester.pumpWidget(const MyApp());
 
-    expect(find.text('Mi App'), findsOneWidget);
-    expect(find.text('Batman, en una versión más limpia'), findsOneWidget);
+    expect(find.text('Login'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('No tienes cuenta? Registrate'), findsOneWidget);
   });
 }

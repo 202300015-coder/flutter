@@ -1,9 +1,8 @@
-import 'dart:convert';
-
-import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 
+import 'auth_database.dart';
 import 'home_page.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -13,50 +12,34 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  static const String _validUsername = 'admin';
-  static const String _validPasswordHash =
-      '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
-
-  String _emailError = '';
+  String _usernameError = '';
   String _passwordError = '';
   String _termsError = '';
   bool _acceptedTerms = false;
 
-  String _hashPassword(String password) {
-    final bytes = utf8.encode(password);
-    final digest = sha256.convert(bytes);
-    return digest.toString();
-  }
-
   @override
   void dispose() {
-    _emailController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _validateAndLogin() {
-    String emailError = '';
+  Future<void> _validateAndLogin() async {
+    String usernameError = '';
     String passwordError = '';
     String termsError = '';
     bool isValid = true;
 
-    if (_emailController.text.isEmpty) {
-      emailError = 'El usuario es obligatorio';
-      isValid = false;
-    } else if (_emailController.text.trim() != _validUsername) {
-      emailError = 'Usuario incorrecto';
+    if (_usernameController.text.isEmpty) {
+      usernameError = 'El usuario es obligatorio';
       isValid = false;
     }
 
     if (_passwordController.text.isEmpty) {
       passwordError = 'La contraseña es obligatoria';
-      isValid = false;
-    } else if (_hashPassword(_passwordController.text) != _validPasswordHash) {
-      passwordError = 'Contraseña incorrecta';
       isValid = false;
     }
 
@@ -66,12 +49,44 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() {
-      _emailError = emailError;
+      _usernameError = usernameError;
       _passwordError = passwordError;
       _termsError = termsError;
     });
 
     if (!isValid) {
+      return;
+    }
+
+    bool loggedIn = false;
+    try {
+      loggedIn = await AuthDatabase.instance
+          .loginUser(
+            username: _usernameController.text.trim(),
+            password: _passwordController.text,
+          )
+          .timeout(const Duration(seconds: 10));
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No se pudo iniciar sesión. Intenta de nuevo.'),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (!loggedIn) {
+      setState(() {
+        _usernameError = 'Usuario o contraseña incorrectos';
+      });
       return;
     }
 
@@ -81,6 +96,34 @@ class _LoginPageState extends State<LoginPage> {
       context,
       MaterialPageRoute(
         builder: (_) => const HomePage(),
+      ),
+    );
+  }
+
+  Future<void> _openRegisterPage() async {
+    final result = await Navigator.push<String>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const RegisterPage(),
+      ),
+    );
+
+    if (!mounted || result == null) {
+      return;
+    }
+
+    setState(() {
+      _usernameController.text = result;
+      _passwordController.clear();
+      _acceptedTerms = false;
+      _usernameError = '';
+      _passwordError = '';
+      _termsError = '';
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Se registró correctamente. Ahora inicia sesión.'),
       ),
     );
   }
@@ -97,14 +140,14 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             children: [
               TextField(
-                controller: _emailController,
+                controller: _usernameController,
                 decoration: const InputDecoration(
                   hintText: "Usuario",
                 ),
               ),
-              if (_emailError.isNotEmpty)
+              if (_usernameError.isNotEmpty)
                 Text(
-                  _emailError,
+                  _usernameError,
                   style: const TextStyle(color: Colors.red),
                 ),
               const SizedBox(height: 20),
@@ -144,6 +187,10 @@ class _LoginPageState extends State<LoginPage> {
               ElevatedButton(
                 onPressed: _validateAndLogin,
                 child: const Text("Entrar"),
+              ),
+              TextButton(
+                onPressed: _openRegisterPage,
+                child: const Text('No tienes cuenta? Registrate'),
               ),
             ],
           ),
