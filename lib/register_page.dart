@@ -11,10 +11,12 @@ class RegisterPage extends StatefulWidget {
 
 class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   String _usernameError = '';
+  String _emailError = '';
   String _passwordError = '';
   String _confirmPasswordError = '';
   bool _isSaving = false;
@@ -22,23 +24,38 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void dispose() {
     _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
+  bool _isValidEmail(String value) {
+    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(value);
+  }
+
   Future<void> _registerUser() async {
     final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
     String usernameError = '';
+    String emailError = '';
     String passwordError = '';
     String confirmPasswordError = '';
     bool isValid = true;
 
     if (username.isEmpty) {
       usernameError = 'El usuario es obligatorio';
+      isValid = false;
+    }
+
+    if (email.isEmpty) {
+      emailError = 'El correo es obligatorio';
+      isValid = false;
+    } else if (!_isValidEmail(email)) {
+      emailError = 'Ingresa un correo válido';
       isValid = false;
     }
 
@@ -60,6 +77,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     setState(() {
       _usernameError = usernameError;
+      _emailError = emailError;
       _passwordError = passwordError;
       _confirmPasswordError = confirmPasswordError;
     });
@@ -76,6 +94,7 @@ class _RegisterPageState extends State<RegisterPage> {
       final created = await AuthDatabase.instance
           .registerUser(
             username: username,
+            email: email,
             password: password,
           )
           .timeout(const Duration(seconds: 10));
@@ -87,15 +106,16 @@ class _RegisterPageState extends State<RegisterPage> {
       if (!created) {
         setState(() {
           _usernameError = 'Ese usuario ya existe';
+          _emailError = 'Ese correo ya existe';
         });
         return;
       }
 
       Navigator.pop(
         context,
-        username,
+        email,
       );
-    } catch (_) {
+    } catch (error) {
       if (!mounted) {
         return;
       }
@@ -142,6 +162,19 @@ class _RegisterPageState extends State<RegisterPage> {
               if (_usernameError.isNotEmpty)
                 Text(
                   _usernameError,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  hintText: 'Correo',
+                ),
+              ),
+              if (_emailError.isNotEmpty)
+                Text(
+                  _emailError,
                   style: const TextStyle(color: Colors.red),
                 ),
               const SizedBox(height: 20),

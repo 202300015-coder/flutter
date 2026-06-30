@@ -1,72 +1,125 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path/path.dart';
+import 'package:sqflite/sqflite.dart';
 
 class AuthDatabase {
   AuthDatabase._();
 
   static final AuthDatabase instance = AuthDatabase._();
 
-  static const String _usersKey = 'users_auth_v1';
+  static const String _databaseName = 'auth_app.db';
+  static const int _databaseVersion = 2;
+  static const String _tableUsers = 'users';
+
+  Database? _database;
+
+  Future<Database> get database async {
+    if (_database != null) {
+      return _database!;
+    }
+
+    _database = await _openDatabase();
+    return _database!;
+  }
+
+  Future<Database> _openDatabase() async {
+    try {
+      final databasesPath = await getDatabasesPath();
+      final dbPath = join(databasesPath, _databaseName);
+
+      return openDatabase(
+        dbPath,
+        version: _databaseVersion,
+        onCreate: (db, version) async {
+          await db.execute('''
+            CREATE TABLE $_tableUsers (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              username TEXT NOT NULL UNIQUE,
+              email TEXT NOT NULL UNIQUE,
+              password_hash TEXT NOT NULL
+            )
+          ''');
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute('DROP TABLE IF EXISTS $_tableUsers');
+            await db.execute('''
+              CREATE TABLE $_tableUsers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL
+              )
+            ''');
+          }
+        },
+      );
+    } catch (error) {
+      throw Exception('No se pudo abrir la base de datos: $error');
+    }
+  }
 
   String hashPassword(String password) {
     final bytes = utf8.encode(password);
     return sha256.convert(bytes).toString();
   }
 
-  Future<Map<String, String>> _readUsers() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_usersKey);
-
-    if (raw == null || raw.isEmpty) {
-      return <String, String>{};
-    }
-
-    final decoded = jsonDecode(raw);
-    if (decoded is! Map<String, dynamic>) {
-      return <String, String>{};
-    }
-
-    return decoded.map(
-      (key, value) => MapEntry(key, value.toString()),
-    );
-  }
-
-  Future<void> _writeUsers(Map<String, String> users) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_usersKey, jsonEncode(users));
-  }
-
   Future<bool> registerUser({
     required String username,
+    required String email,
     required String password,
   }) async {
-    final cleanUser = username.trim().toLowerCase();
-    final users = await _readUsers();
+    try {
+      final db = await database;
+      final cleanUsername = username.trim().toLowerCase();
+      final cleanEmail = email.trim().toLowerCase();
 
-    if (users.containsKey(cleanUser)) {
-      return false;
+      final existingUser = await db.query(
+        _tableUsers,
+        where: 'username = ? OR email = ?',
+        whereArgs: [cleanUsername, cleanEmail],
+        limit: 1,
+      );
+
+      if (existingUser.isNotEmpty) {
+        return false;
+      }
+
+      await db.insert(
+        _tableUsers,
+        <String, dynamic>{
+          'username': cleanUsername,
+          'email': cleanEmail,
+          'password_hash': hashPassword(password),
+        },
+        conflictAlgorithm: ConflictAlgorithm.abort,
+      );
+
+      return true;
+    } catch (error) {
+      throw Exception('No se pudo registrar el usuario: $error');
     }
-
-    users[cleanUser] = hashPassword(password);
-    await _writeUsers(users);
-
-    return true;
   }
 
   Future<bool> loginUser({
-    required String username,
+    required String email,
     required String password,
   }) async {
-    final cleanUser = username.trim().toLowerCase();
-    final users = await _readUsers();
-    final storedHash = users[cleanUser];
+    try {
+      final db = await database;
+      final cleanEmail = email.trim().toLowerCase();
+      final user = await db.query(
+        _tableUsers,
+        where: 'email = ? AND password_hash = ?',
+        whereArgs: [cleanEmail, hashPassword(password)],
+        limit: 1,
+      );
 
-    if (storedHash == null) {
-      return false;
+      return user.isNotEmpty;
+    } catch (error) {
+      throw Exception('No se pudo iniciar sesión: $error');
     }
-
-    return storedHash == hashPassword(password);
   }
 }

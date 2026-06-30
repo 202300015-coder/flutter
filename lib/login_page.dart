@@ -62,7 +62,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       loggedIn = await AuthDatabase.instance
           .loginUser(
-            username: _usernameController.text.trim(),
+            email: _usernameController.text.trim(),
             password: _passwordController.text,
           )
           .timeout(const Duration(seconds: 10));
@@ -142,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
-                  hintText: "Usuario",
+                  hintText: "Correo",
                 ),
               ),
               if (_usernameError.isNotEmpty)
