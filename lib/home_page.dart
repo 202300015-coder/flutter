@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 import 'alazar.dart';
 
 class HomePage extends StatefulWidget {
@@ -38,6 +39,17 @@ class _HomePageState extends State<HomePage> {
               );
             },
             child: const Text('Nuevo'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const LoginPage(),
+                ),
+              );
+            },
+            child: const Text('Cerrar sesión'),
           ),
         ],
       ),

@@ -15,6 +15,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  String _formError = '';
   String _usernameError = '';
   String _passwordError = '';
   String _termsError = '';
@@ -49,6 +50,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     setState(() {
+      _formError = '';
       _usernameError = usernameError;
       _passwordError = passwordError;
       _termsError = termsError;
@@ -71,11 +73,9 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo iniciar sesión. Intenta de nuevo.'),
-        ),
-      );
+      setState(() {
+        _formError = 'No se pudo iniciar sesión. Intenta de nuevo.';
+      });
       return;
     }
 
@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (!loggedIn) {
       setState(() {
-        _usernameError = 'Usuario o contraseña incorrectos';
+        _formError = 'Correo o contraseña incorrectos';
       });
       return;
     }
@@ -139,6 +139,18 @@ class _LoginPageState extends State<LoginPage> {
           padding: const EdgeInsets.all(30),
           child: Column(
             children: [
+              if (_formError.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _formError,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
@@ -146,9 +158,12 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               if (_usernameError.isNotEmpty)
-                Text(
-                  _usernameError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _usernameError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               TextField(
@@ -159,9 +174,12 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               if (_passwordError.isNotEmpty)
-                Text(
-                  _passwordError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _passwordError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               CheckboxListTile(
@@ -179,9 +197,12 @@ class _LoginPageState extends State<LoginPage> {
                 },
               ),
               if (_termsError.isNotEmpty)
-                Text(
-                  _termsError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _termsError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               ElevatedButton(

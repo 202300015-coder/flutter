@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 class AuthDatabase {
   AuthDatabase._();
@@ -26,25 +28,17 @@ class AuthDatabase {
 
   Future<Database> _openDatabase() async {
     try {
-      final databasesPath = await getDatabasesPath();
+      final directory = await getApplicationSupportDirectory();
+      final databasesPath = join(directory.path, 'databases');
       final dbPath = join(databasesPath, _databaseName);
 
-      return openDatabase(
+      await Directory(databasesPath).create(recursive: true);
+
+      return databaseFactory.openDatabase(
         dbPath,
-        version: _databaseVersion,
-        onCreate: (db, version) async {
-          await db.execute('''
-            CREATE TABLE $_tableUsers (
-              id INTEGER PRIMARY KEY AUTOINCREMENT,
-              username TEXT NOT NULL UNIQUE,
-              email TEXT NOT NULL UNIQUE,
-              password_hash TEXT NOT NULL
-            )
-          ''');
-        },
-        onUpgrade: (db, oldVersion, newVersion) async {
-          if (oldVersion < 2) {
-            await db.execute('DROP TABLE IF EXISTS $_tableUsers');
+        options: OpenDatabaseOptions(
+          version: _databaseVersion,
+          onCreate: (db, version) async {
             await db.execute('''
               CREATE TABLE $_tableUsers (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,8 +47,21 @@ class AuthDatabase {
                 password_hash TEXT NOT NULL
               )
             ''');
-          }
-        },
+          },
+          onUpgrade: (db, oldVersion, newVersion) async {
+            if (oldVersion < 2) {
+              await db.execute('DROP TABLE IF EXISTS $_tableUsers');
+              await db.execute('''
+                CREATE TABLE $_tableUsers (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  username TEXT NOT NULL UNIQUE,
+                  email TEXT NOT NULL UNIQUE,
+                  password_hash TEXT NOT NULL
+                )
+              ''');
+            }
+          },
+        ),
       );
     } catch (error) {
       throw Exception('No se pudo abrir la base de datos: $error');
@@ -112,8 +119,8 @@ class AuthDatabase {
       final cleanEmail = email.trim().toLowerCase();
       final user = await db.query(
         _tableUsers,
-        where: 'email = ? AND password_hash = ?',
-        whereArgs: [cleanEmail, hashPassword(password)],
+        where: '(email = ? OR username = ?) AND password_hash = ?',
+        whereArgs: [cleanEmail, cleanEmail, hashPassword(password)],
         limit: 1,
       );
 

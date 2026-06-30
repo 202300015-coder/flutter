@@ -15,6 +15,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
+  String _formError = '';
   String _usernameError = '';
   String _emailError = '';
   String _passwordError = '';
@@ -76,6 +77,7 @@ class _RegisterPageState extends State<RegisterPage> {
     }
 
     setState(() {
+      _formError = '';
       _usernameError = usernameError;
       _emailError = emailError;
       _passwordError = passwordError;
@@ -105,8 +107,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!created) {
         setState(() {
-          _usernameError = 'Ese usuario ya existe';
-          _emailError = 'Ese correo ya existe';
+          _formError = 'Ese usuario o correo ya existe';
         });
         return;
       }
@@ -120,11 +121,9 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No se pudo registrar. Intenta de nuevo.'),
-        ),
-      );
+      setState(() {
+        _formError = 'No se pudo registrar. Intenta de nuevo.';
+      });
     } finally {
       if (mounted) {
         setState(() {
@@ -153,6 +152,18 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               const SizedBox(height: 30),
+              if (_formError.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Text(
+                    _formError,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               TextField(
                 controller: _usernameController,
                 decoration: const InputDecoration(
@@ -160,9 +171,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               if (_usernameError.isNotEmpty)
-                Text(
-                  _usernameError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _usernameError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               TextField(
@@ -173,9 +187,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               if (_emailError.isNotEmpty)
-                Text(
-                  _emailError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _emailError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               TextField(
@@ -186,9 +203,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               if (_passwordError.isNotEmpty)
-                Text(
-                  _passwordError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _passwordError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 20),
               TextField(
@@ -199,9 +219,12 @@ class _RegisterPageState extends State<RegisterPage> {
                 ),
               ),
               if (_confirmPasswordError.isNotEmpty)
-                Text(
-                  _confirmPasswordError,
-                  style: const TextStyle(color: Colors.red),
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    _confirmPasswordError,
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 ),
               const SizedBox(height: 30),
               ElevatedButton(
