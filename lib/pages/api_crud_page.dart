@@ -16,8 +16,6 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
   final MovieClient _movieClient = MovieClient();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _posterUrlController = TextEditingController();
-  final TextEditingController _yearController = TextEditingController();
-  final TextEditingController _genresController = TextEditingController();
   final TextEditingController _consoleController = TextEditingController();
   final ScrollController _moviesScrollController = ScrollController();
 
@@ -30,8 +28,6 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
     _movieClient.dispose();
     _titleController.dispose();
     _posterUrlController.dispose();
-    _yearController.dispose();
-    _genresController.dispose();
     _consoleController.dispose();
     _moviesScrollController.dispose();
     super.dispose();
@@ -104,8 +100,6 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
     _selectedMovie = movie;
     _titleController.text = movie.title;
     _posterUrlController.text = movie.posterUrl ?? '';
-    _yearController.text = movie.year?.toString() ?? '';
-    _genresController.text = movie.genres?.join(', ') ?? '';
   }
 
   void _clearSelection() {
@@ -113,28 +107,33 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
       _selectedMovie = null;
       _titleController.clear();
       _posterUrlController.clear();
-      _yearController.clear();
-      _genresController.clear();
       _consoleController.text = 'Selección limpia. Puedes elegir otra película o crear una nueva.';
     });
   }
 
-  MovieModel _buildMovieFromForm() {
+  int _generateMovieId() {
+    final ids = _movies.map((movie) => movie.id).whereType<int>().toList();
+    if (ids.isEmpty) {
+      return DateTime.now().millisecondsSinceEpoch;
+    }
+
+    return ids.reduce((current, next) => current > next ? current : next) + 1;
+  }
+
+  String _generateImdbId() {
+    return 'tt${DateTime.now().millisecondsSinceEpoch}';
+  }
+
+  MovieModel _buildMovieFromForm({int? id, String? imdbId}) {
     return MovieModel(
+      id: id,
       title: _titleController.text.trim().isEmpty
           ? 'Untitled Horror Movie'
           : _titleController.text.trim(),
       posterUrl: _posterUrlController.text.trim().isEmpty
           ? null
           : _posterUrlController.text.trim(),
-      year: int.tryParse(_yearController.text.trim()),
-      genres: _genresController.text.trim().isEmpty
-          ? null
-          : _genresController.text
-              .split(',')
-              .map((item) => item.trim())
-              .where((item) => item.isNotEmpty)
-              .toList(),
+      imdbId: imdbId ?? _generateImdbId(),
     );
   }
 
@@ -142,7 +141,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
 
   bool _requireSelectedMovie(String actionLabel) {
     if (_selectedMovieId == null) {
-      _consoleController.text = 'Selecciona una película de la lista antes de usar $actionLabel.';
+      _consoleController.text = 'Selecciona una película antes de usar $actionLabel.';
       return false;
     }
 
@@ -227,7 +226,9 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                     _buildActionButton('POST', () {
                       _executeRequest(() async {
                         final createdMovie = await _movieClient.createMovie(
-                          _buildMovieFromForm(),
+                          _buildMovieFromForm(
+                            id: _generateMovieId(),
+                          ),
                         );
                         await _refreshMovies();
                         return createdMovie;
@@ -242,7 +243,10 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                       _executeRequest(() async {
                         final updatedMovie = await _movieClient.updateMovie(
                           _selectedMovieId!,
-                          _buildMovieFromForm(),
+                          _buildMovieFromForm(
+                            id: _selectedMovieId!,
+                            imdbId: _selectedMovie?.imdbId,
+                          ),
                         );
                         await _refreshMovies();
                         return updatedMovie;
@@ -255,17 +259,11 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                       }
 
                       final changes = <String, dynamic>{
+                        'id': _selectedMovieId!,
                         'title': _titleController.text.trim(),
                         if (_posterUrlController.text.trim().isNotEmpty)
                           'posterURL': _posterUrlController.text.trim(),
-                        if (_yearController.text.trim().isNotEmpty)
-                          'year': int.tryParse(_yearController.text.trim()),
-                        if (_genresController.text.trim().isNotEmpty)
-                          'genres': _genresController.text
-                              .split(',')
-                              .map((item) => item.trim())
-                              .where((item) => item.isNotEmpty)
-                              .toList(),
+                        'imdbId': _selectedMovie?.imdbId ?? _generateImdbId(),
                       };
 
                       _executeRequest(() async {
@@ -372,47 +370,25 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                   ),
                   if (_selectedMovie != null)
                     Text(
-                      'Seleccionada: ${_selectedMovie!.id ?? '-'}',
+                      'Película seleccionada: ${_selectedMovie!.title}',
                       style: const TextStyle(
                         color: Color(0xFFE5B95B),
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: _clearSelection,
-                    icon: const Icon(Icons.close, size: 18),
-                    label: const Text('Quitar selección'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFF2D8B3),
-                    ),
-                  ),
                 ],
               ),
               const SizedBox(height: 12),
               _buildInfoField(
                 controller: _titleController,
-                label: 'Title',
+                label: 'Título',
                 hint: 'Nombre de la película',
               ),
               const SizedBox(height: 12),
               _buildInfoField(
                 controller: _posterUrlController,
-                label: 'Poster URL',
+                label: 'URL del póster',
                 hint: 'https://...',
-              ),
-              const SizedBox(height: 12),
-              _buildInfoField(
-                controller: _yearController,
-                label: 'Year',
-                hint: '2024',
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              _buildInfoField(
-                controller: _genresController,
-                label: 'Genres',
-                hint: 'Horror, Thriller',
               ),
               const SizedBox(height: 12),
               TextField(
@@ -430,7 +406,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
                   ),
-                  hintText: 'Aquí aparecerá la respuesta de la API.',
+                  hintText: 'Respuesta de la API en formato JSON.',
                   hintStyle: const TextStyle(
                     color: Color(0xFF8B7D6E),
                   ),
@@ -483,15 +459,15 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
               child: _movies.isEmpty
                   ? const Center(
                       child: Text(
-                        'La lista se mostrará aquí cuando uses GET /movies.',
+                        'Las películas aparecerán aquí cuando uses GET /movies.',
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Color(0xFFC9B8A6)),
                       ),
                     )
                   : Scrollbar(
                       controller: _moviesScrollController,
-                      thickness: 10,
-                      radius: const Radius.circular(12),
+                      thickness: 14,
+                      radius: const Radius.circular(16),
                       trackVisibility: true,
                       thumbVisibility: true,
                       interactive: true,
@@ -500,7 +476,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                       child: ListView.separated(
                         controller: _moviesScrollController,
                         itemCount: _movies.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
                           return _buildMovieCard(_movies[index]);
                         },
@@ -553,7 +529,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                     : Image.network(
                         movie.posterUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
+                        errorBuilder: (_, _, _) {
                           return Container(
                             color: const Color(0xFF7A1111),
                             alignment: Alignment.center,
@@ -603,11 +579,8 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    [
-                      if (movie.year != null) movie.year.toString(),
-                      if (movie.genres != null && movie.genres!.isNotEmpty) movie.genres!.join(', '),
-                    ].join(' · '),
-                    maxLines: 2,
+                    movie.imdbId ?? 'Sin IMDb ID',
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: Color(0xFFC9B8A6),
