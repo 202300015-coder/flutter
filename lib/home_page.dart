@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart';
 import 'alazar.dart';
+import 'pages/api_crud_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -153,6 +154,29 @@ class _HomePageState extends State<HomePage> {
                 },
                 icon: const Icon(Icons.visibility),
                 label: const Text('Mostrar Texto'),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const ApiCrudPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.movie_filter_outlined),
+                  label: const Text('API CRUD'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
