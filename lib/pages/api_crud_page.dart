@@ -19,6 +19,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
   final TextEditingController _yearController = TextEditingController();
   final TextEditingController _genresController = TextEditingController();
   final TextEditingController _consoleController = TextEditingController();
+  final ScrollController _moviesScrollController = ScrollController();
 
   bool _isLoading = false;
   List<MovieModel> _movies = <MovieModel>[];
@@ -32,6 +33,7 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
     _yearController.dispose();
     _genresController.dispose();
     _consoleController.dispose();
+    _moviesScrollController.dispose();
     super.dispose();
   }
 
@@ -83,11 +85,27 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
   }
 
   void _seedForm(MovieModel movie) {
+    if (_selectedMovie?.id == movie.id) {
+      _clearSelection();
+      return;
+    }
+
     _selectedMovie = movie;
     _titleController.text = movie.title;
     _posterUrlController.text = movie.posterUrl ?? '';
     _yearController.text = movie.year?.toString() ?? '';
     _genresController.text = movie.genres?.join(', ') ?? '';
+  }
+
+  void _clearSelection() {
+    setState(() {
+      _selectedMovie = null;
+      _titleController.clear();
+      _posterUrlController.clear();
+      _yearController.clear();
+      _genresController.clear();
+      _consoleController.text = 'Selección limpia. Puedes elegir otra película o crear una nueva.';
+    });
   }
 
   MovieModel _buildMovieFromForm() {
@@ -328,6 +346,15 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
+                  const SizedBox(width: 8),
+                  TextButton.icon(
+                    onPressed: _clearSelection,
+                    icon: const Icon(Icons.close, size: 18),
+                    label: const Text('Quitar selección'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: const Color(0xFFF2D8B3),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -430,8 +457,16 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                       ),
                     )
                   : Scrollbar(
+                      controller: _moviesScrollController,
+                      thickness: 10,
+                      radius: const Radius.circular(12),
+                      trackVisibility: true,
                       thumbVisibility: true,
+                      interactive: true,
+                      scrollbarOrientation: ScrollbarOrientation.right,
+                      notificationPredicate: (notification) => notification.depth == 0,
                       child: ListView.separated(
+                        controller: _moviesScrollController,
                         itemCount: _movies.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 10),
                         itemBuilder: (context, index) {
