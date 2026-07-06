@@ -62,6 +62,17 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
     }
   }
 
+  Future<void> _refreshMovies() async {
+    final movies = await _movieClient.getMovies();
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _movies = movies;
+    });
+  }
+
   void _applyResult(dynamic result) {
     if (result is List<MovieModel>) {
       setState(() {
@@ -214,9 +225,13 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                       _executeRequest(() => _movieClient.getMovies());
                     }),
                     _buildActionButton('POST', () {
-                      _executeRequest(() => _movieClient.createMovie(
-                            _buildMovieFromForm(),
-                          ));
+                      _executeRequest(() async {
+                        final createdMovie = await _movieClient.createMovie(
+                          _buildMovieFromForm(),
+                        );
+                        await _refreshMovies();
+                        return createdMovie;
+                      });
                     }),
                     _buildActionButton('PUT', () {
                       if (!_requireSelectedMovie('PUT')) {
@@ -224,10 +239,14 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                         return;
                       }
 
-                      _executeRequest(() => _movieClient.updateMovie(
-                            _selectedMovieId!,
-                            _buildMovieFromForm(),
-                          ));
+                      _executeRequest(() async {
+                        final updatedMovie = await _movieClient.updateMovie(
+                          _selectedMovieId!,
+                          _buildMovieFromForm(),
+                        );
+                        await _refreshMovies();
+                        return updatedMovie;
+                      });
                     }),
                     _buildActionButton('PATCH', () {
                       if (!_requireSelectedMovie('PATCH')) {
@@ -249,10 +268,14 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                               .toList(),
                       };
 
-                      _executeRequest(() => _movieClient.patchMovie(
-                            _selectedMovieId!,
-                            changes,
-                          ));
+                      _executeRequest(() async {
+                        final patchedMovie = await _movieClient.patchMovie(
+                          _selectedMovieId!,
+                          changes,
+                        );
+                        await _refreshMovies();
+                        return patchedMovie;
+                      });
                     }),
                     _buildActionButton('DELETE', () {
                       if (!_requireSelectedMovie('DELETE')) {
@@ -260,7 +283,16 @@ class _ApiCrudPageState extends State<ApiCrudPage> {
                         return;
                       }
 
-                      _executeRequest(() => _movieClient.deleteMovie(_selectedMovieId!));
+                      _executeRequest(() async {
+                        final message = await _movieClient.deleteMovie(_selectedMovieId!);
+                        await _refreshMovies();
+                        if (mounted) {
+                          setState(() {
+                            _selectedMovie = null;
+                          });
+                        }
+                        return message;
+                      });
                     }),
                   ],
                 ),
