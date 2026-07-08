@@ -48,9 +48,9 @@ class _AlazarPageState extends State<AlazarPage> {
                     valorSlider = value;
                   });
                 },
-                onChangeEnd: (value) {
-                  NotificationService.showNotification(
-                    'Slider',
+                onChangeEnd: (value) async {
+                  await NotificationService.showNotification(
+                    'Alazar - Tamaño',
                     'Tamaño actualizado a ${value.toInt()}.',
                   );
                 },
@@ -59,14 +59,16 @@ class _AlazarPageState extends State<AlazarPage> {
               SwitchListTile(
                 value: encendido,
                 title: Text(encendido ? 'Encendido' : 'Apagado'),
-                onChanged: (value) {
+                onChanged: (value) async {
                   setState(() {
                     encendido = value;
                   });
 
-                  NotificationService.showNotification(
-                    'Switch',
-                    encendido ? 'Círculo encendido.' : 'Círculo apagado.',
+                  await NotificationService.showNotification(
+                    'Alazar - Estado',
+                    encendido
+                        ? 'Círculo encendido correctamente.'
+                        : 'Círculo apagado correctamente.',
                   );
                 },
               ),
@@ -86,12 +88,15 @@ class _AlazarPageState extends State<AlazarPage> {
               const SizedBox(height: 25),
 
               ElevatedButton(
-                onPressed: () {
-                  NotificationService.showNotification(
-                    'Salir',
+                onPressed: () async {
+                  final navigator = Navigator.of(context);
+
+                  await NotificationService.showNotification(
+                    'Alazar',
                     'Gracias por usar Alazar.',
                   );
-                  Navigator.pop(context);
+
+                  navigator.pop();
                 },
                 child: const Text('Salir'),
               ),
@@ -107,13 +112,13 @@ class _AlazarPageState extends State<AlazarPage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
       ),
-      onPressed: () {
+      onPressed: () async {
         setState(() {
           colorActual = color;
         });
 
-        NotificationService.showNotification(
-          'Color',
+        await NotificationService.showNotification(
+          'Alazar - Color',
           '$texto seleccionado correctamente.',
         );
       },
