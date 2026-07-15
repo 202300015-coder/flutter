@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'login_page.dart';
-// Asegúrate de que esta ruta sea la correcta para tu proyecto
-import 'notification_service.dart'; 
 
 void main() async {
   // Asegura que los bindings de Flutter estén listos antes de inicializar servicios nativos
@@ -14,9 +12,6 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-
-  // Inicialización del servicio de notificaciones
-  await NotificationService.initialize();
 
   runApp(const MyApp());
 }
