@@ -39,6 +39,15 @@ class _HomePageState extends State<HomePage> {
       settings: initializationSettings,
     );
 
+    // AGREGADO: Solicita permiso explícito en Android 13+
+    final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission(); // Pide el permiso en pantalla
+    }
+
     // 1. Notificación instantánea al entrar a la Home
     _lanzarNotificacion(
       id: 1,
@@ -246,7 +255,7 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 15),
               const Divider(),
               const SizedBox(height: 10),
-              
+
               // 4. El botón de broma definitivo
               ElevatedButton(
                 onPressed: () {

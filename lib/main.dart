@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:upgrader/upgrader.dart'; // 1. Importación del paquete upgrader
 import 'login_page.dart';
 
 void main() async {
@@ -28,7 +29,14 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
         colorSchemeSeed: Colors.brown,
       ),
-      home: const LoginPage(),
+      // 2. Envolvemos la LoginPage con UpgradeAlert para activar las alertas de actualización
+      home: UpgradeAlert(
+        upgrader: Upgrader(
+        
+          debugLogging: kDebugMode, // Solo muestra registros de depuración en consola si estás en modo debug
+        ),
+        child: const LoginPage(),
+      ),
     );
   }
 }
