@@ -266,7 +266,23 @@ class _AlazarWidgetState extends State<AlazarWidget> {
                                         _buildCoverSection(theme),
                                         if (!isCompact) const SizedBox(width: 20),
                                         if (isCompact) const SizedBox(height: 20),
-                                        Expanded(
+                                        // FIX: "RenderFlex children have non-zero flex but
+                                        // incoming height constraints are unbounded".
+                                        // Antes esto era Expanded(child: ...), lo cual exige
+                                        // que el Flex padre tenga una altura acotada. Cuando
+                                        // isCompact es true, este Flex se comporta como una
+                                        // Column dentro de otra Column con mainAxisSize.min
+                                        // (y potencialmente dentro de un scroll sin altura
+                                        // fija), así que la altura entrante es infinita y
+                                        // Expanded truena. Con Flexible + FlexFit.loose en
+                                        // modo vertical, el hijo solo mide lo que su contenido
+                                        // necesita, sin exigir una altura acotada. En modo
+                                        // horizontal (!isCompact) sí mantenemos el
+                                        // comportamiento original (FlexFit.tight, equivalente
+                                        // a Expanded) porque ahí el ancho normalmente sí está
+                                        // acotado por el ConstrainedBox de más arriba.
+                                        Flexible(
+                                          fit: isCompact ? FlexFit.loose : FlexFit.tight,
                                           child: _buildInformationSection(theme),
                                         ),
                                       ],

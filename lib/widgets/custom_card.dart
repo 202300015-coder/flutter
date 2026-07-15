@@ -18,7 +18,7 @@ class CustomCard extends StatelessWidget {
 
     return Card(
       elevation: 0,
-      color: colorScheme.surfaceContainerHighest.withOpacity(0.55),
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18),
       ),

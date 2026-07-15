@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'login_page.dart';
 import 'alazar.dart';
 import 'pages/api_crud_page.dart';
@@ -12,10 +13,68 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController textoController = TextEditingController();
+  final FlutterLocalNotificationsPlugin _notificationsPlugin = FlutterLocalNotificationsPlugin();
 
   bool mostrarResultado = false;
   bool checkboxValue = false;
   double imageScale = 1.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _initNotifications();
+  }
+
+  // Inicializa el servicio de notificaciones locales
+  Future<void> _initNotifications() async {
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+    );
+
+    // CORRECCIÓN: Se usa el parámetro con nombre 'settings' requerido por las nuevas versiones
+    await _notificationsPlugin.initialize(
+      settings: initializationSettings,
+    );
+
+    // 1. Notificación instantánea al entrar a la Home
+    _lanzarNotificacion(
+      id: 1,
+      titulo: '¡Bati-Alerta de Seguridad! 🦇',
+      cuerpo: 'Has ingresado con éxito a la baticueva (Home Page).',
+    );
+  }
+
+  // Función genérica para disparar notificaciones
+  Future<void> _lanzarNotificacion({
+    required int id,
+    required String titulo,
+    required String cuerpo,
+  }) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+      'canal_bromas', // ID del canal
+      'Alertas de la Baticueva', // Nombre del canal
+      channelDescription: 'Canal para notificaciones divertidas y del sistema',
+      importance: Importance.max,
+      priority: Priority.high,
+      playSound: true,
+    );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    // CORRECCIÓN: Se asignan explícitamente los parámetros con nombre
+    await _notificationsPlugin.show(
+      id: id,
+      title: titulo,
+      body: cuerpo,
+      notificationDetails: platformChannelSpecifics,
+    );
+  }
 
   @override
   void dispose() {
@@ -140,6 +199,15 @@ class _HomePageState extends State<HomePage> {
                   setState(() {
                     imageScale = value;
                   });
+
+                  // 2. Alerta humorística por agrandar demasiado la imagen
+                  if (imageScale >= 1.5) {
+                    _lanzarNotificacion(
+                      id: 2,
+                      titulo: '¡Suelte ese Slider, ciudadano! 🔍',
+                      cuerpo: 'Un poco más de zoom y vas a desintegrar los píxeles de Batman.',
+                    );
+                  }
                 },
               ),
               const SizedBox(height: 5),
@@ -159,12 +227,53 @@ class _HomePageState extends State<HomePage> {
                     'Texto: ${textoController.text} - Checkbox: $checkboxValue',
                   );
 
+                  // 3. Notificación si el usuario le da click y el texto está vacío
+                  if (textoController.text.trim().isEmpty) {
+                    _lanzarNotificacion(
+                      id: 3,
+                      titulo: '¡Alerta de campo vacío! ⚠️',
+                      cuerpo: 'Intentaste ver el resultado sin escribir nada. Alfred no está orgulloso de ti.',
+                    );
+                  }
+
                   setState(() {
                     mostrarResultado = true;
                   });
                 },
                 icon: const Icon(Icons.visibility),
                 label: const Text('Mostrar Texto'),
+              ),
+              const SizedBox(height: 15),
+              const Divider(),
+              const SizedBox(height: 10),
+              
+              // 4. El botón de broma definitivo
+              ElevatedButton(
+                onPressed: () {
+                  _lanzarNotificacion(
+                    id: 4,
+                    titulo: '🚨 ¡BATISEÑAL ACTIVADA! 🚨',
+                    cuerpo: 'El Comisionado Gordon reporta que rompiste el botón de broma. ¡A los bati-móviles!',
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.warning_amber_rounded),
+                    SizedBox(width: 8),
+                    Text(
+                      'BOTÓN SECRETO (NO TOCAR)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
