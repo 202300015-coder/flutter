@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart'; // Requerido para usar compute
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'login_page.dart';
@@ -19,6 +21,14 @@ class _HomePageState extends State<HomePage> {
   bool checkboxValue = false;
   double imageScale = 1.0;
 
+  // --- VARIABLES PARA EL BATI-LABORATORIO ---
+  Timer? _batiTimer;
+  int _contadorTimer = 0;
+  String _resultadoAsyncAwait = "Esperando que inicies la prueba...";
+  bool _cargandoAsyncAwait = false;
+  String _resultadoIsolate = "Esperando procesamiento pesado...";
+  bool _cargandoIsolate = false;
+
   @override
   void initState() {
     super.initState();
@@ -34,21 +44,18 @@ class _HomePageState extends State<HomePage> {
       android: initializationSettingsAndroid,
     );
 
-    // CORRECCIÓN: Se usa el parámetro con nombre 'settings' requerido por las nuevas versiones
     await _notificationsPlugin.initialize(
       settings: initializationSettings,
     );
 
-    // AGREGADO: Solicita permiso explícito en Android 13+
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _notificationsPlugin.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidImplementation != null) {
-      await androidImplementation.requestNotificationsPermission(); // Pide el permiso en pantalla
+      await androidImplementation.requestNotificationsPermission();
     }
 
-    // 1. Notificación instantánea al entrar a la Home
     _lanzarNotificacion(
       id: 1,
       titulo: '¡Bati-Alerta de Seguridad! 🦇',
@@ -64,8 +71,8 @@ class _HomePageState extends State<HomePage> {
   }) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'canal_bromas', // ID del canal
-      'Alertas de la Baticueva', // Nombre del canal
+      'canal_bromas',
+      'Alertas de la Baticueva',
       channelDescription: 'Canal para notificaciones divertidas y del sistema',
       importance: Importance.max,
       priority: Priority.high,
@@ -76,7 +83,6 @@ class _HomePageState extends State<HomePage> {
       android: androidPlatformChannelSpecifics,
     );
 
-    // CORRECCIÓN: Se asignan explícitamente los parámetros con nombre
     await _notificationsPlugin.show(
       id: id,
       title: titulo,
@@ -85,10 +91,297 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // --- MÉTODOS ASÍNCRONOS REQUERIDOS ---
+
+  // 1. Simulación de carga para el Future.builder
+  Future<String> _obtenerDatosDeLaBaticomputadora() async {
+    await Future.delayed(const Duration(seconds: 3));
+    return "¡Bati-Datos cargados con éxito! El Guasón está en el asilo Arkham.";
+  }
+
+  // 2. Implementación explícita de async / await
+  Future<void> _ejecutarAccionAsyncAwait() async {
+    setState(() {
+      _cargandoAsyncAwait = true;
+      _resultadoAsyncAwait = "Conectando con el satélite de Industrias Wayne...";
+    });
+
+    // Simulando una petición de red con await
+    await Future.delayed(const Duration(seconds: 2));
+
+    setState(() {
+      _resultadoAsyncAwait = "¡Señal encriptada recibida! Alfred dice que la cena está lista.";
+      _cargandoAsyncAwait = false;
+    });
+  }
+
+  // 3. Implementación de un Isolate usando compute (tarea pesada en hilo secundario)
+  // NOTA: La función que recibe 'compute' DEBE ser una función global o estática.
+  static int _tareaPesadaIsolate(int iteraciones) {
+    // Simulamos un cálculo matemático intensivo en CPU que congelaría la UI principal
+    int resultado = 0;
+    for (int i = 0; i < iteraciones; i++) {
+      resultado += i;
+    }
+    return resultado;
+  }
+
+  Future<void> _ejecutarTareaPesadaEnIsolate() async {
+    setState(() {
+      _cargandoIsolate = true;
+      _resultadoIsolate = "Calculando trayectorias en un hilo separado (Isolate)...";
+    });
+
+    // compute() envía la ejecución de '_tareaPesadaIsolate' a un Isolate secundario de fondo
+    final resultadoCalculado = await compute(_tareaPesadaIsolate, 100000000);
+
+    setState(() {
+      _resultadoIsolate = "Cálculo terminado en Isolate. Sumatoria: $resultadoCalculado";
+      _cargandoIsolate = false;
+    });
+  }
+
+  // 4. Implementación de Timer (Timer.periodic)
+  void _iniciarBatiTimer() {
+    _detenerBatiTimer(); // Limpia cualquier timer previo activo para evitar duplicados
+    _contadorTimer = 0;
+    _batiTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        _contadorTimer++;
+      });
+    });
+  }
+
+  void _detenerBatiTimer() {
+    if (_batiTimer != null) {
+      _batiTimer!.cancel();
+      _batiTimer = null;
+    }
+  }
+
   @override
   void dispose() {
     textoController.dispose();
+    _detenerBatiTimer(); // Muy importante cancelar timers para evitar fugas de memoria
     super.dispose();
+  }
+
+  
+  void _mostrarModalLaboratorio() {
+    // Iniciamos el Timer al abrir el modal para que se vea en tiempo real
+    _iniciarBatiTimer();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      builder: (BuildContext context) {
+        // Usamos StateSetter para actualizar el modal si es necesario,
+        // o simplemente confiamos en el setState de la página que redibuja la vista si está enlazada.
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                top: 20,
+                left: 20,
+                right: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 30,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 50,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    const Center(
+                      child: Text(
+                        '🔬 Bati-Laboratorio Asíncrono 🧪',
+                        style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const Divider(height: 30),
+
+                    // --- SECCIÓN 1: TIMER.PERIODIC ---
+                    _buildSeccionTitulo("⏰ 1. IMPLEMENTACIÓN: Timer.periodic"),
+                    const Text(
+                      "Este cronómetro se actualiza de fondo cada segundo usando un Timer periódico.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade100,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Bati-Segundos Transcurridos: $_contadorTimer",
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              setModalState(() {
+                                _iniciarBatiTimer();
+                              });
+                            },
+                            child: const Text("Reiniciar"),
+                          )
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // --- SECCIÓN 2: FUTURE.BUILDER ---
+                    _buildSeccionTitulo("🧱 2. IMPLEMENTACIÓN: Future.builder"),
+                    const Text(
+                      "Carga datos asíncronos directamente en la UI controlando sus estados.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    FutureBuilder<String>(
+                      future: _obtenerDatosDeLaBaticomputadora(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Card(
+                            color: Colors.blueGrey,
+                            child: Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  CircularProgressIndicator(color: Colors.white),
+                                  SizedBox(width: 15),
+                                  Text("Cargando Future.builder...", style: TextStyle(color: Colors.white))
+                                ],
+                              ),
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text("Error: ${snapshot.error}");
+                        } else {
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.green.shade100,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: Text(
+                              "${snapshot.data}",
+                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    // --- SECCIÓN 3: ASYNC / AWAIT ---
+                    _buildSeccionTitulo("⚡ 3. IMPLEMENTACIÓN: Async / Await"),
+                    const Text(
+                      "Ejecuta flujos secuenciales asíncronos esperando que terminen para continuar.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _cargandoAsyncAwait
+                              ? null
+                              : () async {
+                                  await _ejecutarAccionAsyncAwait();
+                                  setModalState(() {});
+                                },
+                          child: const Text("Iniciar await"),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _resultadoAsyncAwait,
+                            style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // --- SECCIÓN 4: COMPUTE / ISOLATE ---
+                    _buildSeccionTitulo("🚀 4. IMPLEMENTACIÓN: Compute / Isolate"),
+                    const Text(
+                      "Ejecuta un loop pesado (100 millones de ciclos) en otro hilo sin trabar la interfaz.",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _cargandoIsolate
+                              ? null
+                              : () async {
+                                  await _ejecutarTareaPesadaEnIsolate();
+                                  setModalState(() {});
+                                },
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
+                          child: const Text("Procesar Isolate"),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            _resultadoIsolate,
+                            style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 25),
+
+                    // Botón para cerrar el modal
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _detenerBatiTimer();
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Cerrar Laboratorio"),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).then((value) {
+      // Nos aseguramos de detener el timer si se cierra arrastrando hacia abajo
+      _detenerBatiTimer();
+    });
+  }
+
+  Widget _buildSeccionTitulo(String titulo) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Text(
+        titulo,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: Colors.black87),
+      ),
+    );
   }
 
   @override
@@ -184,7 +477,26 @@ class _HomePageState extends State<HomePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+
+              // --- BOTÓN PRINCIPAL DEL BATI-LABORATORIO ASÍNCRONO ---
+              ElevatedButton.icon(
+                onPressed: _mostrarModalLaboratorio,
+                icon: const Icon(Icons.science),
+                label: const Text('PROBAR LAB ASÍNCRONO'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueGrey.shade800,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const Divider(),
+              const SizedBox(height: 10),
+
               TextField(
                 controller: textoController,
                 decoration: InputDecoration(
@@ -209,7 +521,6 @@ class _HomePageState extends State<HomePage> {
                     imageScale = value;
                   });
 
-                  // 2. Alerta humorística por agrandar demasiado la imagen
                   if (imageScale >= 1.5) {
                     _lanzarNotificacion(
                       id: 2,
@@ -236,7 +547,6 @@ class _HomePageState extends State<HomePage> {
                     'Texto: ${textoController.text} - Checkbox: $checkboxValue',
                   );
 
-                  // 3. Notificación si el usuario le da click y el texto está vacío
                   if (textoController.text.trim().isEmpty) {
                     _lanzarNotificacion(
                       id: 3,
@@ -256,7 +566,6 @@ class _HomePageState extends State<HomePage> {
               const Divider(),
               const SizedBox(height: 10),
 
-              // 4. El botón de broma definitivo
               ElevatedButton(
                 onPressed: () {
                   _lanzarNotificacion(
